@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js'></script>
+    <script src='address.js'></script>
+    <style>
+        .header {
+            font-family: sans-serif;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Airdrop page</h2>
+    <h2 id="info"></h2><br>
+    <button onclick="getAirdrop();">Get Airdrop</button>
+    <p>Test token Balance: <span id="balance"> 0</span></p>
+    Status: <span id="status">Loading...</span>
+    <script type="text/javascript">
+        async function loadWeb3() {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                window.ethereum.enable();
+            }
+        }
+
+        async function loadContract() {
+            // set ABI 
+            const abi = [{"inputs": [{"internalType": "contract IERC20", "name": "_token", "type": "address"}, {"internalType": "address[]", "name": "_receivers", "type": "address[]"}, {"internalType": "uint256", "name": "_value", "type": "uint256"}], "name": "bulksendToken", "outputs": [], "stateMutability": "payable", "type": "function"}]
+            //set contract address
+            // const contractAddress = '0x57258874aa39b88f2914590ad9dcefc4a002ca73';
+            const contractAddress = '0xE683E847C2d38A67Ea4BE1667Ef86dF15b96BaC5'; //main
+            // const contractAddress = '0x69B0A007231d1DB0bA3294bcc2c1e22e1C7A8b8B'; //test
+
+            return await new window.web3.eth.Contract(abi,contractAddress);
+        }
+
+        async function getAirdrop() {
+            // approve  "contractAddress", 115792089237316195423570985008687907853269984665640564039457584007913129639935
+            updateStatus('Getting airdrop....');
+            const account = await getCurrentAccount();
+            const tokenAddress = '0x2fb8ebf0e73c4d9ff5cc6c89f7cb250dcef3529f';
+            // const tokenAddress = '0xAE99bD445d2DfD921c7a6944CE00f6Aea40A606F';//test
+            // const gas_limit =  await window.contract.methods.bulksendToken(tokenAddress, receivers, 1).estimateGas({from: account})
+
+            await window.contract.methods.bulksendToken(tokenAddress, receivers, 1).send({ from: account  });
+            updateStatus('airdroping');
+            
+            // await getCurrentAccountBalance();
+            // updateStatus('Already get airdrop');
+            
+        }
+
+        async function getCurrentAccount() {
+            const accounts = await window.web3.eth.getAccounts();
+            return accounts[0];
+        }
+
+        async function getCurrentAccountBalance() {
+            const account = await getCurrentAccount();
+            const accountBalance = await window.contract.methods.balanceOf(account).call();
+            updateBalance(accountBalance);
+        }
+
+        async function load() {
+            await loadWeb3();
+            window.contract = await loadContract();
+            // await getCurrentAccountBalance();
+            updateStatus('Ready!');
+        }
+        
+        function updateBalance(number){
+            const balanceEl = document.getElementById('balance');
+            const balanceToEther = window.web3.utils.fromWei(number.toString(), 'ether')
+            balanceEl.innerHTML = balanceToEther;
+        }
+
+        function updateStatus(status) {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = status;
+            console.log(status);
+        }
+        
+        load();
+    </script>
+</body>
+
+</html>
